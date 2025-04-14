@@ -9,15 +9,12 @@
   const addCat = (index) => {
     let cat = offers[index].find((cat) => cat.name === catType[index]);
     if (cat) {
-      if (catCount[index] < 0 && cat.count == 1) {
+      if (catCount[index] < 0 && cat.count + catCount[index] <= 0) {
         let catIndex = offers[index].findIndex(
           (cat) => cat.name === catType[index]
         );
         offers[index].splice(catIndex, 1);
       } else {
-        if (cat.count + catCount[index] < 0) {
-          return;
-        }
         cat.count += catCount[index];
       }
     } else {
@@ -61,9 +58,7 @@
       <div class="section mx-auto p-4">
         <div class="d-flex justify-content-between">
           <label for="people" class="form-label">Offers</label>
-          <button type="button" class="btn col col-md-1" onclick={addOffer}>
-            +
-          </button>
+          <button type="button" class="btn" onclick={addOffer}> + </button>
         </div>
 
         {#each offers as offer, i (i)}
@@ -80,7 +75,11 @@
               >
             </div>
             <div class="d-flex align-items-center gap-3 mb-2">
-              <select class="form-select w-25" bind:value={catType[i]}>
+              <select
+                class="form-select"
+                style="width: 30%;"
+                bind:value={catType[i]}
+              >
                 {#each Object.keys(catalogue) as cat}
                   <option value={cat}>
                     {cat}
@@ -89,7 +88,7 @@
               </select>
               <input
                 class="form-control"
-                style="width: 10%"
+                style="width: 20%"
                 type="number"
                 bind:value={catCount[i]}
               />
@@ -103,6 +102,9 @@
             </div>
             <hr />
             <div class="row">
+              {#if offers[i].length == 0}
+                <div class="col-md-12 mb-2">add cats!!</div>
+              {/if}
               {#each offers[i] as cat}
                 <div class="col-md-3 mb-2">
                   {cat["name"]}: {cat["count"]}
@@ -110,7 +112,7 @@
               {/each}
             </div>
             <hr />
-            <p><b>Total:</b> {totals[i]}</p>
+            <p><b>Total Value:</b> {totals[i]}</p>
           </div>
         {/each}
       </div>
@@ -131,6 +133,9 @@
     border: var(--bs-primary) !important;
   } */
 
+  .section {
+    width: 50%;
+  }
   @media (max-width: 1500px) {
     .section {
       width: 75%;
@@ -140,8 +145,5 @@
     .section {
       width: 100%;
     }
-  }
-  .section {
-    width: 50%;
   }
 </style>
