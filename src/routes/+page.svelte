@@ -1,7 +1,10 @@
 <script>
   import { onMount } from "svelte";
+  import CloseIcon from "../icons/CloseIcon.svelte";
+
   let offers = $state([[]]);
   let totals = $state([0]);
+  let offerNames = $state(["Offer 1"]);
   let catType = $state(["Fine"]);
   let catCount = $state([1]);
   let catalogue = $state({});
@@ -32,6 +35,7 @@
 
   const addOffer = () => {
     offers.push([]);
+    offerNames.push("Offer " + offers.length);
     catType.push("Fine");
     catCount.push(1);
     totals.push(0);
@@ -43,9 +47,17 @@
     catCount.splice(i, 1);
     totals.splice(i, 1);
   };
+
   onMount(async () => {
     const catalogueRes = await fetch("/catalogue.json");
     catalogue = await catalogueRes.json();
+    window.ultimateStressTest = (i, count) => {
+      Object.keys(catalogue).forEach((cat) => {
+        offers[i].push({ name: cat, count: count });
+        totals[i] =
+          Math.round((totals[i] + catalogue[cat] * count) * 100) / 100;
+      });
+    };
   });
 </script>
 
@@ -60,18 +72,25 @@
           <label for="people" class="form-label">Offers</label>
           <button type="button" class="btn" onclick={addOffer}> + </button>
         </div>
-
+        {#if offers.length == 0}
+          <div class="col-md-12 ms-5">No offers!</div>
+        {/if}
         {#each offers as offer, i (i)}
           <div class="row m-auto border p-2 rounded mb-3">
-            <div class="d-flex">
-              <p>Offer {i + 1}</p>
+            <div class="d-flex my-3">
+              <input
+                class="form-control form-control-sm"
+                style="width: 25%;"
+                type="text"
+                bind:value={offerNames[i]}
+              />
               <button
                 type="button"
                 class="btn text-danger ms-auto align-self-end"
                 style="font-size: x-large; padding: unset;"
                 onclick={() => removeOffer(i)}
               >
-                ✖</button
+                <CloseIcon></CloseIcon></button
               >
             </div>
             <div class="d-flex align-items-center gap-3 mb-2">
@@ -103,7 +122,7 @@
             <hr />
             <div class="row">
               {#if offers[i].length == 0}
-                <div class="col-md-12 mb-2">add cats!!</div>
+                <div class="col-md-12 mb-3">Nothing offered!</div>
               {/if}
               {#each offers[i] as cat}
                 <div class="col-md-3 mb-2">
@@ -115,6 +134,31 @@
             <p><b>Total Value:</b> {totals[i]}</p>
           </div>
         {/each}
+      </div>
+      <div class="section mx-auto p-4">
+        <div class="d-flex justify-content-between">
+          <label for="people" class="form-label">Output</label>
+        </div>
+
+        <div class="row m-auto border p-2 rounded mb-3">
+          {#if offers.length == 0}
+            <div class="col-md-12 my-2">No offers!</div>
+          {/if}
+          {#each offers as offer, i (i)}
+            <p class="mt-3">{offerNames[i]}: <b>{totals[i]}</b></p>
+            <div class="row">
+              {#if offers[i].length == 0}
+                <div class="col-md-12 mb-3">Nothing offered!</div>
+              {/if}
+              {#each offers[i] as cat}
+                <div class="col-md-3 mb-2">
+                  {cat["name"]}: {cat["count"]}
+                </div>
+              {/each}
+              <hr />
+            </div>
+          {/each}
+        </div>
       </div>
     </form>
   </div>
