@@ -7,7 +7,19 @@
   let offerNames = $state(["Offer 1"]);
   let catType = $state(["Fine"]);
   let catCount = $state([1]);
-  let catalogue = $state({});
+  let catalogues = $state({ official: { data: {} } });
+  let catalogue = $state("official");
+
+  const catculateTotal = (
+    index,
+    cat = catType[index],
+    count = catCount[index]
+  ) => {
+    totals[index] =
+      Math.round(
+        (totals[index] + catalogues[catalogue]["data"][cat] * count) * 100
+      ) / 100;
+  };
 
   const addCat = (index) => {
     let cat = offers[index].find((cat) => cat.name === catType[index]);
@@ -26,11 +38,16 @@
       }
       offers[index].push({ name: catType[index], count: catCount[index] });
     }
+    catculateTotal(index);
+  };
 
-    totals[index] =
-      Math.round(
-        (totals[index] + catalogue[catType[index]] * catCount[index]) * 100
-      ) / 100;
+  const catculateAllTotal = () => {
+    offers.forEach((offer, index) => {
+      totals[index] = 0;
+      for (let cat of offer) {
+        catculateTotal(index, cat["name"], cat["count"]);
+      }
+    });
   };
 
   const addOffer = () => {
@@ -49,13 +66,12 @@
   };
 
   onMount(async () => {
-    const catalogueRes = await fetch("/catalogue.json");
-    catalogue = await catalogueRes.json();
-    window.ultimateStressTest = (i, count) => {
-      Object.keys(catalogue).forEach((cat) => {
+    const cataloguesRes = await fetch("/catalogues.json");
+    catalogues = await cataloguesRes.json();
+    window.eGirlStressTest = (i, count) => {
+      Object.keys(catalogues["official"]["data"]).forEach((cat) => {
         offers[i].push({ name: cat, count: count });
-        totals[i] =
-          Math.round((totals[i] + catalogue[cat] * count) * 100) / 100;
+        catculateTotal(i, cat, count);
       });
     };
   });
@@ -69,7 +85,25 @@
     <form>
       <div class="section mx-auto p-4">
         <div class="d-flex justify-content-between">
-          <label for="people" class="form-label">Offers</label>
+          <label for="catalouge" class="form-label">Catalouge</label>
+        </div>
+
+        <select
+          class="form-select"
+          style="width: 40%;"
+          bind:value={catalogue}
+          onchange={catculateAllTotal}
+        >
+          {#each Object.values(catalogues) as catalouge, i}
+            <option value={Object.keys(catalogues)[i]}>
+              {catalouge.name}
+            </option>
+          {/each}
+        </select>
+      </div>
+      <div class="section mx-auto p-4">
+        <div class="d-flex justify-content-between">
+          <p class="form-label">Offers</p>
           <button type="button" class="btn" onclick={addOffer}> + </button>
         </div>
         {#if offers.length == 0}
@@ -99,7 +133,7 @@
                 style="width: 30%;"
                 bind:value={catType[i]}
               >
-                {#each Object.keys(catalogue) as cat}
+                {#each Object.keys(catalogues[catalogue]["data"]) as cat}
                   <option value={cat}>
                     {cat}
                   </option>
@@ -137,25 +171,29 @@
       </div>
       <div class="section mx-auto p-4">
         <div class="d-flex justify-content-between">
-          <label for="people" class="form-label">Output</label>
+          <p class="form-label">Output</p>
         </div>
 
         <div class="row m-auto border p-2 rounded mb-3">
           {#if offers.length == 0}
             <div class="col-md-12 my-2">No offers!</div>
+          {:else}
+            <p class="mb-0">Using <b>{catalogues[catalogue]["name"]}</b> Catalouge!</p>
           {/if}
           {#each offers as offer, i (i)}
-            <p class="mt-3">{offerNames[i]}: <b>{totals[i]}</b></p>
-            <div class="row">
-              {#if offers[i].length == 0}
-                <div class="col-md-12 mb-3">Nothing offered!</div>
-              {/if}
-              {#each offers[i] as cat}
-                <div class="col-md-3 mb-2">
-                  {cat["name"]}: {cat["count"]}
-                </div>
-              {/each}
-              <hr />
+            <div>
+              <p class="mt-3">{offerNames[i]}: <b>{totals[i]}</b></p>
+              <div class="row">
+                {#if offers[i].length == 0}
+                  <div class="col-md-12 mb-3 ms-4">Nothing offered!</div>
+                {/if}
+                {#each offers[i] as cat}
+                  <div class="col-md-3 mb-2">
+                    {cat["name"]}: {cat["count"]}
+                  </div>
+                {/each}
+                <hr />
+              </div>
             </div>
           {/each}
         </div>
