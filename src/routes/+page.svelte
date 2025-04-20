@@ -79,9 +79,6 @@
 
 <div class="vh-100 d-flex justify-content-center font-monospace">
   <div class="w-100">
-    <nav class="bg-light p-1 text-center d-flex navbar justify-content-center">
-      <h1 class="header">Catculator!</h1>
-    </nav>
     <form>
       <div class="section mx-auto p-4">
         <div class="d-flex justify-content-between">
